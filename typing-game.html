@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>タイピングゲーム</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body {
+    background:#000;
+    color:#fff;
+    font-family:monospace;
+    text-align:center;
+    padding:20px;
+  }
+  #word {
+    font-size:32px;
+    margin:30px 0;
+  }
+  #input {
+    font-size:24px;
+    padding:8px;
+    width:80%;
+    max-width:400px;
+  }
+  #stats {
+    margin-top:20px;
+    font-size:16px;
+  }
+  button {
+    margin-top:20px;
+    padding:8px 16px;
+    font-size:16px;
+  }
+</style>
+</head>
+<body>
+
+<h1>タイピングゲーム</h1>
+<div id="word">クリックでスタート</div>
+<input id="input" type="text" disabled placeholder="スタートすると入力できます">
+<div id="stats">
+  正解: <span id="correct">0</span>　
+  ミス: <span id="miss">0</span>　
+  時間: <span id="time">0.0</span>s
+</div>
+<button id="startBtn">スタート</button>
+
+<script>
+const words = [
+  "apple","banana","orange","grape","peach",
+  "keyboard","javascript","typing","reverse","secret",
+  "dragon","blackhole","mobile","click","game"
+];
+
+let currentWord = "";
+let correct = 0;
+let miss = 0;
+let startTime = null;
+let timerId = null;
+let playing = false;
+
+const wordEl = document.getElementById("word");
+const inputEl = document.getElementById("input");
+const correctEl = document.getElementById("correct");
+const missEl = document.getElementById("miss");
+const timeEl = document.getElementById("time");
+const startBtn = document.getElementById("startBtn");
+
+function pickWord() {
+  const w = words[Math.floor(Math.random() * words.length)];
+  currentWord = w;
+  wordEl.textContent = w;
+  inputEl.value = "";
+}
+
+function updateTime() {
+  if (!playing) return;
+  const now = performance.now();
+  const sec = (now - startTime) / 1000;
+  timeEl.textContent = sec.toFixed(1);
+  timerId = requestAnimationFrame(updateTime);
+}
+
+function startGame() {
+  correct = 0;
+  miss = 0;
+  correctEl.textContent = correct;
+  missEl.textContent = miss;
+  timeEl.textContent = "0.0";
+
+  playing = true;
+  startTime = performance.now();
+  pickWord();
+  inputEl.disabled = false;
+  inputEl.focus();
+  startBtn.textContent = "リセット";
+
+  if (timerId) cancelAnimationFrame(timerId);
+  updateTime();
+}
+
+function endGame() {
+  playing = false;
+  inputEl.disabled = true;
+  if (timerId) cancelAnimationFrame(timerId);
+
+  const sec = parseFloat(timeEl.textContent);
+  const total = correct;
+  const wpm = sec > 0 ? (total / sec * 60).toFixed(1) : 0;
+  alert(`おつかれさま！\n正解: ${correct}\nミス: ${miss}\nWPM: ${wpm}`);
+}
+
+startBtn.addEventListener("click", () => {
+  if (!playing) {
+    startGame();
+  } else {
+    endGame();
+  }
+});
+
+inputEl.addEventListener("keydown", (e) => {
+  if (!playing) return;
+  if (e.key === "Enter") {
+    if (inputEl.value === currentWord) {
+      correct++;
+      correctEl.textContent = correct;
+      pickWord();
+    } else {
+      miss++;
+      missEl.textContent = miss;
+      inputEl.select();
+    }
+  }
+});
+</script>
+
+</body>
+</html>
